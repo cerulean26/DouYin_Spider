@@ -19,7 +19,7 @@ def norm_text(text):
 
 
 def timestamp_to_str(timestamp):
-    time_local = time.localtime(timestamp / 1000)
+    time_local = time.localtime(timestamp)
     dt = time.strftime("%Y-%m-%d %H:%M:%S", time_local)
     return dt
 
@@ -183,7 +183,8 @@ def download_work(work_info, path, save_choice):
     nickname = norm_str(nickname)[:20]
     if title.strip() == '':
         title = f'无标题'
-    save_path = f'{path}/{nickname}_{user_id}/{title}_{work_id}'
+    create_date = timestamp_to_str(work_info['create_time'])[:10]
+    save_path = f'{path}/{nickname}_{user_id}/{create_date}_{title}_{work_id}'
     check_and_create_path(save_path)
     with open(f'{save_path}/info.json', mode='w', encoding='utf-8') as f:
         f.write(json.dumps(work_info) + '\n')
