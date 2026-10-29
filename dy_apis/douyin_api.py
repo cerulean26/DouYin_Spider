@@ -133,12 +133,13 @@ class DouyinAPI:
 
 
     @staticmethod
-    def get_user_all_work_info(auth, user_url: str, **kwargs) -> list:
+    def get_user_all_work_info(auth, user_url: str, max_count=None, **kwargs) -> list:
         """
-        获取用户全部作品信息.
+        获取用户作品信息.
         :param auth: DouyinAuth object.
         :param user_url: 用户主页URL.
-        :return: 全部作品信息.
+        :param max_count: 限制返回条数（取最新前 N 条）；None 表示全部.
+        :return: 作品信息列表（按发布时间倒序，最新在前）.
         """
         max_cursor = "0"
         work_list = []
@@ -149,6 +150,9 @@ class DouyinAPI:
             works = res_json["aweme_list"]
             max_cursor = str(res_json["max_cursor"])
             work_list.extend(works)
+            if max_count is not None and len(work_list) >= max_count:
+                work_list = work_list[:max_count]
+                break
             if res_json["has_more"] != 1:
                 break
         return work_list

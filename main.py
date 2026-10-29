@@ -58,7 +58,7 @@ class Data_Spider():
             save_to_xlsx(work_list, file_path)
 
 
-    def spider_user_all_work(self, auth, user_url: str, base_path: dict, save_choice: str, excel_name: str = '', proxies=None):
+    def spider_user_all_work(self, auth, user_url: str, base_path: dict, save_choice: str, excel_name: str = '', max_count: int | None = None, proxies=None):
         """
         爬取一个用户的所有作品
         :param auth: 用户认证信息
@@ -66,11 +66,15 @@ class Data_Spider():
         :param base_path: 保存路径
         :param save_choice: 保存方式 all: 保存所有的信息, media: 保存视频和图片（media-video只下载视频, media-image只下载图片，media都下载）, excel: 保存到excel
         :param excel_name: excel文件名
+        :param max_count: 限制下载条数（取最新前 N 条），None 表示全部
         :param proxies: 代理
         :return:
         """
         user_info = self.douyin_apis.get_user_info(auth, user_url)
+        # 接口照常抓全量（请求行为与 max_count=None 完全一致），仅在下载/保存前取最新前 N 条
         work_list = self.douyin_apis.get_user_all_work_info(auth, user_url)
+        if max_count is not None:
+            work_list = work_list[:max_count]
         work_info_list = []
         logger.info(f'用户 {user_url} 作品数量: {len(work_list)}')
         if save_choice == 'all' or save_choice == 'excel':
@@ -140,22 +144,24 @@ if __name__ == '__main__':
     #
     # # 2 爬取用户的所有作品信息 用户链接 如下所示 注意此url会过期！
     # user_url = 'https://www.douyin.com/user/MS4wLjABAAAAULqT-SrJDT7RqeoxeGg1hB14Ia5UI9Pm66kzKmI1ITD2Fo3bUhqYePBaztkzj7U5?from_tab_name=main&relation=0&vid=7227654252435361061'
-    # data_spider.spider_user_all_work(auth, user_url, base_path, 'all')
+    MAX_WORKS = 10  # 限制下载条数（取最新前 N 条），设为 None 可下载全部
+    user_url = 'https://www.douyin.com/user/MS4wLjABAAAA6NxQYoZ8KAhEYdibXMZO78lAmBYfj6J2ndXbieO-oN_amPtCLhv5QKyUaPg4yCsO?from_tab_name=main'
+    data_spider.spider_user_all_work(auth, user_url, base_path, 'all', max_count=MAX_WORKS)
 
     # 3 搜索指定关键词的作品
-    query = "榴莲"
-    require_num = 20  # 搜索的数量
-    sort_type = '0'  # 排序方式 0 综合排序, 1 最多点赞, 2 最新发布
-    publish_time = '0'  # 发布时间 0 不限, 1 一天内, 7 一周内, 180 半年内
-    filter_duration = ""  # 视频时长 空字符串 不限, 0-1 一分钟内, 1-5 1-5分钟内, 5-10000 5分钟以上
-    search_range = "0"  # 搜索范围 0 不限, 1 最近看过, 2 还未看过, 3 关注的人
-    content_type = "0"  # 内容形式 0 不限, 1 视频, 2 图文
+    # query = "榴莲"
+    # require_num = 20  # 搜索的数量
+    # sort_type = '0'  # 排序方式 0 综合排序, 1 最多点赞, 2 最新发布
+    # publish_time = '0'  # 发布时间 0 不限, 1 一天内, 7 一周内, 180 半年内
+    # filter_duration = ""  # 视频时长 空字符串 不限, 0-1 一分钟内, 1-5 1-5分钟内, 5-10000 5分钟以上
+    # search_range = "0"  # 搜索范围 0 不限, 1 最近看过, 2 还未看过, 3 关注的人
+    # content_type = "0"  # 内容形式 0 不限, 1 视频, 2 图文
 
     # data_spider.spider_some_search_work(auth, query, require_num, base_path, 'all', sort_type, publish_time, filter_duration, search_range, content_type)
 
     # 4 私信：用户链接转 uid 后建对话发一条
-    user_url = 'https://www.douyin.com/user/MS4wLjABAAAAaB23ankxsw7PIgXnKxCcLC9iJIadZMQQpS-KWVO8Y306zOksK9cUvT5QdoOIcsS6?from_tab_name=live'
-    content = "在吗"
-    to_user_id = DouyinAPI.get_user_info(auth, user_url)['user']['uid']
-    conversation_id, conversation_short_id, ticket = DouyinAPI.create_conversation(auth, to_user_id)
-    DouyinAPI.send_msg(auth, conversation_id, conversation_short_id, ticket, content)
+    # user_url = 'https://www.douyin.com/user/MS4wLjABAAAAaB23ankxsw7PIgXnKxCcLC9iJIadZMQQpS-KWVO8Y306zOksK9cUvT5QdoOIcsS6?from_tab_name=live'
+    # content = "在吗"
+    # to_user_id = DouyinAPI.get_user_info(auth, user_url)['user']['uid']
+    # conversation_id, conversation_short_id, ticket = DouyinAPI.create_conversation(auth, to_user_id)
+    # DouyinAPI.send_msg(auth, conversation_id, conversation_short_id, ticket, content)

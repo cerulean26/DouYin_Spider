@@ -58,9 +58,18 @@ def handle_work_info(data):
     collect_count = data['statistics']['collect_count']
     share_count = data['statistics']['share_count']
     video_addr = data['video']['play_addr']['url_list'][0]
-    images = data['images']
-    if not isinstance(images, list):
-        images = []
+    # 抖音 images 是 [{'url_list': [...], 'width': ...}, ...]（元素为 dict），
+    # 需取每张图的首个 URL，否则后续 ', '.join(images) 会因元素是 dict 而报错
+    images = []
+    raw_images = data.get('images') or []
+    if isinstance(raw_images, list):
+        for item in raw_images:
+            if isinstance(item, dict):
+                url_list = item.get('url_list') or []
+                if url_list:
+                    images.append(url_list[0])
+            elif isinstance(item, str):
+                images.append(item)
     create_time = data['create_time']
 
     text_extra = data['text_extra'] if 'text_extra' in data else []
